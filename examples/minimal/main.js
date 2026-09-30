@@ -7,7 +7,7 @@
 'use strict';
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
-const updateKit = require('../host/main-host');
+const updateKit = require('../../host/main-host');
 
 let win = null;
 
