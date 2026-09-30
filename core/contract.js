@@ -117,13 +117,30 @@ function coverage(trackedFiles, units) {
  * 支持两种格式：
  *   - 字符串数组：["checkUpdate", "applyUpdate"]
  *   - 对象数组：[{name: "checkUpdate", type: "invoke", channel: "update-kit:check"}]
+ *
+ * 支持两种 preload 结构：
+ *   - 直接包含 handlers：const handlers = { ... };
+ *   - 引用生成的 handlers：const handlers = require('./preload-handlers');
  */
-function checkBridgeApi(preloadSource, declaredApi) {
-  const start = preloadSource.indexOf('const handlers');
+function checkBridgeApi(preloadSource, declaredApi, preloadPath) {
+  let handlersSource = preloadSource;
+
+  // 检查是否引用生成的 handlers
+  const requireMatch = preloadSource.match(/require\(['"]\.\/preload-handlers['"]\)/);
+  if (requireMatch && preloadPath) {
+    const handlersPath = require('path').join(require('path').dirname(preloadPath), 'preload-handlers.js');
+    try {
+      handlersSource = require('fs').readFileSync(handlersPath, 'utf8');
+    } catch (e) {
+      return { errors: [`找不到 preload-handlers.js: ${handlersPath}`] };
+    }
+  }
+
+  const start = handlersSource.indexOf('const handlers');
   if (start < 0) return { errors: ['preload.js 里找不到 `const handlers = {` 声明块'] };
 
   // 从 `const handlers` 起，取到第一个顶格 `};` 为止
-  const rest = preloadSource.slice(start);
+  const rest = handlersSource.slice(start);
   const end = rest.search(/\n\};/);
   const block = end < 0 ? rest : rest.slice(0, end + 2);
   if (end < 0) return { errors: ['preload.js 的 handlers 块没有找到结束的 `};`'] };
