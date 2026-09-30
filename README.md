@@ -78,6 +78,60 @@ npm run kit-test        # 运行 kit 测试
 git subtree pull --prefix=update-kit git@github.com:kicool/update-kit.git main --squash
 ```
 
+## examples/minimal 使用说明
+
+`examples/minimal/` 是一个最小接入示例，展示如何使用 update-kit。
+
+### 运行示例
+
+```bash
+cd examples/minimal
+npm install
+npm start
+```
+
+### 示例验证内容
+
+| 验证项 | 说明 |
+|---|---|
+| 应用启动 | `npm start` 成功启动 |
+| 检查更新 | 点击「检查更新」按钮，能检测更新 |
+| 应用更新 | 点击「应用更新」按钮，能拉取更新 |
+| 重启 | 点击「重启」按钮，能重启应用 |
+
+### 示例目录结构
+
+```
+examples/minimal/
+├── package.json           ← 示例项目配置
+├── main.js                ← 最小接入示例
+├── preload.js             ← 由 inject-preload 生成
+├── contract.json          ← 填好的契约
+└── src/
+    └── app/
+        ├── index.html     ← 示例页面
+        └── renderer.js    ← 渲染层逻辑
+```
+
+### 示例接入步骤
+
+1. **安装依赖**：
+   ```bash
+   cd examples/minimal
+   npm install
+   ```
+
+2. **生成 preload**：
+   ```bash
+   npm run gen-preload
+   npm run inject-preload
+   ```
+
+3. **运行**：
+   ```bash
+   npm start
+   ```
+
 ## 分类决策树
 
 ```
