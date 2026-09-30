@@ -113,6 +113,10 @@ function coverage(trackedFiles, units) {
  * 3) bridgeApi 双向一致：解析 preload.js 源码里的 handlers 键名，与注册表比对。
  * 不 require 它 —— preload 首行 require('electron')，node 直接跑会炸，
  * 而这个检查必须能在 CI 里跑，所以只能用正则/AST 读源码。
+ *
+ * 支持两种格式：
+ *   - 字符串数组：["checkUpdate", "applyUpdate"]
+ *   - 对象数组：[{name: "checkUpdate", type: "invoke", channel: "update-kit:check"}]
  */
 function checkBridgeApi(preloadSource, declaredApi) {
   const start = preloadSource.indexOf('const handlers');
@@ -127,7 +131,10 @@ function checkBridgeApi(preloadSource, declaredApi) {
   const implemented = new Set();
   for (const m of block.matchAll(/^\s{2}([A-Za-z_$][\w$]*)\s*:/gm)) implemented.add(m[1]);
 
-  const declared = new Set(declaredApi || []);
+  // 支持字符串数组和对象数组两种格式
+  const declared = new Set(
+    (declaredApi || []).map((api) => typeof api === 'string' ? api : api.name)
+  );
   const unimplemented = [...declared].filter((k) => !implemented.has(k));
   const undeclared = [...implemented].filter((k) => !declared.has(k));
 

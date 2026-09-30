@@ -1,0 +1,107 @@
+{
+  "_说明": "kit 默认值，由 kit 维护者更新。项目契约可覆盖其中的字段。",
+
+  "contractVersion": "1.2.0",
+  "contractMinSupported": "1.0.0",
+
+  "remote": "origin",
+  "branch": "release",
+
+  "paths": {
+    "repoPath": ".",
+    "preload": "src/application/preload.js",
+    "appEntry": "src/application/renderer/index.html",
+    "rendererDir": "src/application/renderer",
+    "rendererEntry": "src/application/renderer/renderer.js"
+  },
+
+  "bridgeApi": [
+    { "name": "checkUpdate",     "type": "invoke", "channel": "update-kit:check" },
+    { "name": "applyUpdate",     "type": "invoke", "channel": "update-kit:apply" },
+    { "name": "relaunch",        "type": "send",   "channel": "update-kit:relaunch" },
+    { "name": "onStatus",        "type": "on",     "channel": "update-kit:status" },
+    { "name": "onConfig",        "type": "on",     "channel": "update-kit:config" },
+    { "name": "setUpdatePolicy", "type": "invoke", "channel": "update-kit:set-policy" }
+  ],
+
+  "updateUnits": [
+    {
+      "name": "renderer",
+      "class": "hot",
+      "paths": ["src/application/renderer/"],
+      "action": "reload"
+    },
+    {
+      "name": "shell",
+      "class": "restart",
+      "paths": [
+        "src/application/main.js",
+        "src/application/preload.js",
+        "src/application/registry.js",
+        "src/application/registry.json",
+        "src/application/updater.js",
+        "src/update-kit/"
+      ],
+      "action": "relaunch"
+    },
+    {
+      "name": "deps",
+      "class": "restart",
+      "paths": ["package.json", "package-lock.json"],
+      "action": "npm-ci-then-relaunch",
+      "fallback": "reinstall"
+    },
+    {
+      "name": "runtime",
+      "class": "reinstall",
+      "paths": ["node_modules/"],
+      "action": "prompt-reinstall",
+      "unreachableByGit": true
+    },
+    {
+      "name": "docs",
+      "class": "none",
+      "paths": ["docs/", "README.md", "todo.md"],
+      "action": "none"
+    },
+    {
+      "name": "scripts",
+      "class": "none",
+      "paths": ["scripts/"],
+      "action": "none"
+    },
+    {
+      "name": "tools",
+      "class": "none",
+      "paths": ["src/tools/"],
+      "action": "none"
+    },
+    {
+      "name": "meta",
+      "class": "none",
+      "paths": [".gitignore", ".nvmrc"],
+      "action": "none"
+    }
+  ],
+
+  "updatePolicy": {
+    "enabled": true,
+    "onStartup": "checkAndApply",
+    "schedule": {
+      "mode": "interval",
+      "intervalMinutes": 60,
+      "dailyAt": "09:00",
+      "jitterMinutes": 5
+    },
+    "quietHours": { "from": "23:00", "to": "07:00" },
+    "apply": "auto",
+    "constraints": {
+      "skipWhenDirty": true,
+      "skipWhenOfflineSilently": true,
+      "autoNpmCi": false,
+      "npmCiTimeoutMs": 300000,
+      "maxRetries": 3,
+      "backoffMinutes": [5, 15, 60]
+    }
+  }
+}
