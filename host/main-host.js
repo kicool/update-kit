@@ -9,7 +9,7 @@
 //
 // 红线：electron 通过参数注入，不直接 require('electron')。
 'use strict';
-const path = require('path');
+const path = require('node:path');
 const { createStateStore } = require('./state-store');
 const { createLocalConfig } = require('./local-config');
 const { createScheduler } = require('./scheduler');

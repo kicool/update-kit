@@ -11,8 +11,8 @@
 //
 // 红线：纯 node，零 electron 依赖，可进 CI。
 'use strict';
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 /**
  * 创建契约加载器

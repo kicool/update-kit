@@ -5,8 +5,8 @@
 //   2. 覆盖率         枚举全部 tracked 文件，列出未被任何 updateUnit 覆盖者（白名单的前提是「都登记了」）
 //   3. bridgeApi 双向一致  注册表声明 vs preload.js 实际实现（用正则解析源码，不 require，因为 preload 首行 require('electron')）
 'use strict';
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 const classifier = require('./classifier');
 
 /** 1) 结构自检 */
@@ -128,9 +128,9 @@ function checkBridgeApi(preloadSource, declaredApi, preloadPath) {
   // 检查是否引用生成的 handlers
   const requireMatch = preloadSource.match(/require\(['"]\.\/preload-handlers['"]\)/);
   if (requireMatch && preloadPath) {
-    const handlersPath = require('path').join(require('path').dirname(preloadPath), 'preload-handlers.js');
+    const handlersPath = require('node:path').join(require('node:path').dirname(preloadPath), 'preload-handlers.js');
     try {
-      handlersSource = require('fs').readFileSync(handlersPath, 'utf8');
+      handlersSource = require('node:fs').readFileSync(handlersPath, 'utf8');
     } catch (e) {
       return { errors: [`找不到 preload-handlers.js: ${handlersPath}`] };
     }

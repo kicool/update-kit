@@ -11,8 +11,8 @@
 //
 // 红线：纯 node，零 electron 依赖。
 'use strict';
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 const projectRoot = path.resolve(__dirname, '../../..');
 const preloadPath = path.join(projectRoot, 'src/application/preload.js');
