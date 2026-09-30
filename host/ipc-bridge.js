@@ -29,6 +29,7 @@ function registerIpcBridge(ipcMain, bridgeApi, impl) {
       ipcMain.on(channel, impl[name]);
     } else if (type === 'on') {
       // on 类型由 renderer 主动监听，主进程不需要注册
+      // 但需要标记为已注册，避免误报"多余实现"
     } else {
       throw new Error(`[ipc-bridge] 未知 type: ${type}`);
     }
