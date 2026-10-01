@@ -14,6 +14,7 @@ let win = null;
 app.whenReady().then(async () => {
   const kit = await updateKit.init({
     projectRoot: __dirname,
+    kitDir: path.resolve(__dirname, '../..'),
     electron: { app, BrowserWindow, ipcMain, dialog },
     getWindow: () => win,
     logger: console,
