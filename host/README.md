@@ -81,6 +81,13 @@ host 不得出现 `'update:status'` 之类的字面量。bridgeApi 双向一致�
 { ok:true, updated:true, version, prevVersion, klass, needsRestart, plan, files }
 ```
 
+**「检查即拉取」的语义**（渲染层据此判断弹窗时机）：`apply=auto` 时，
+启动（onStartup=checkAndApply）、定时检测、手动 `checkUpdate` 走的都是
+`checkAndMaybeApply()`——先 check，`shouldApply` 通过就直接拉取并返回
+`updated:true`；只有 `updated:true` 且 `needsRestart` 时才允许弹「重启生效」。
+`apply=notify` 时 check 只检测不拉取，由 `applyUpdate` 触发拉取。
+**check 返回 `updated:false` 时弹重启 = 契约违规**（重启前后代码一模一样）。
+
 **config（`onConfig` 通道）** —— 渲染层按此渲染抬头与策略面板：
 
 ```js

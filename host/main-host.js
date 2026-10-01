@@ -176,9 +176,10 @@ async function init(opts) {
     };
   }
 
-  // 应用更新（拉取 + 失败回滚）。返回的 status 与 check() 同一形状，updated=true 表示已拉取
-  async function apply(mode = 'manual') {
-    const pre = await check(mode);
+  // 应用更新（拉取 + 失败回滚）。返回的 status 与 check() 同一形状，updated=true 表示已拉取。
+  // pre：调用方若刚跑过 check() 可把结果传入，避免二次 fetch。
+  async function apply(mode = 'manual', pre = null) {
+    pre = pre || await check(mode);
     // 无可拉取 / 离线 / 硬保护拦截（dirty、ahead）→ 原样把 check 的结论带回去
     if (!pre.ok || !pre.behind || pre.dirty || pre.blocked) return pre;
 
@@ -193,7 +194,7 @@ async function init(opts) {
     const newVersion = await engine.getVersion({ cwd: projectRoot });
     sendConfig();
 
-    return {
+    const status = {
       ok: true, updated: true, behind: false, offline: false, mode,
       version: newVersion.version, prevVersion: pre.version,
       files: pre.plan ? pre.plan.files : [],
@@ -201,12 +202,32 @@ async function init(opts) {
       klass: pre.klass,
       needsRestart: pre.needsRestart,
     };
+
+    // 恢复到旧语义：apply=auto 时 hot 类更新拉完直接 reload 渲染层（无重启热更）
+    if (status.klass === 'hot' && loader.updatePolicy.apply !== 'notify') {
+      const win = getWindow && getWindow();
+      if (win && win.webContents) win.webContents.reload();
+    }
+
+    return status;
+  }
+
+  // 检测 + （按策略）自动拉取。startup=checkAndApply / 定时检测 / apply=auto 的手动检查都走这里：
+  // shouldApply 为真（apply=auto 且非 dirty）时检查即拉取，通知用户「有更新」之前先把它拉下来。
+  async function checkAndMaybeApply(mode = 'manual') {
+    const s = await check(mode);
+    if (s.behind && !s.dirty && !s.blocked && upolicy.shouldApply(loader.updatePolicy, s.plan || {})) {
+      return await apply(mode, s);
+    }
+    return s;
   }
 
   // 注册 IPC（通道名全部来自契约 bridgeApi，由 ipc-bridge 校验双向一致）
   registerIpcBridge(ipcMain, loader.bridgeApi, {
     checkUpdate: async () => {
-      const s = await check('manual');
+      // apply=auto 时「检查更新」= 检查并拉取（与 startup=checkAndApply / 定时检测同一语义）；
+      // apply=notify 时只检测，由用户点「更新」触发 applyUpdate
+      const s = await checkAndMaybeApply('manual');
       lastStatus = s;
       return s;
     },
@@ -244,7 +265,9 @@ async function init(opts) {
       sendToWindow(statusChannel, { ok: true, checking: true, version: v.version, mode: 'startup' });
       try {
         // 启动或热更 reload 后复用 lastStatus，避免二次 fetch 造成「初始化…」空窗
-        const status = lastStatus || await check('startup');
+        // onStartup=checkAndApply 时启动检测直接拉取（apply=auto 前提下）
+        const auto = upolicy.startupMode(loader.updatePolicy) === 'checkAndApply';
+        const status = lastStatus || (auto ? await checkAndMaybeApply('startup') : await check('startup'));
         lastStatus = status;
         sendToWindow(statusChannel, status);
         sendConfig(); // schedule.lastCheckAt 可能已刷新，顺带再发一次
@@ -263,7 +286,7 @@ async function init(opts) {
       state,
       run: async () => {
         const now = Date.now();
-        const result = await check('scheduled');
+        const result = await checkAndMaybeApply('scheduled');
         lastStatus = result;
         state.lastCheckAt = now;
         state.failures = result.ok ? 0 : (state.failures || 0) + 1;
@@ -281,6 +304,7 @@ async function init(opts) {
   return {
     check,
     apply,
+    checkAndMaybeApply,
     attach,
     startScheduler,
     preloadPath: loader.preloadPath,
