@@ -78,41 +78,6 @@ npm run kit-test        # 运行 kit 测试
 git subtree pull --prefix=update-kit git@github.com:kicool/update-kit.git main --squash
 ```
 
-## examples/minimal 使用说明
-
-`examples/minimal/` 是一个最小接入示例，展示如何使用 update-kit。
-
-### 运行示例
-
-```bash
-cd examples/minimal
-npm install
-npm start
-```
-
-### 示例验证内容
-
-| 验证项 | 说明 |
-|---|---|
-| 应用启动 | `npm start` 成功启动 |
-| 检查更新 | 点击「检查更新」按钮，能检测更新 |
-| 应用更新 | 点击「应用更新」按钮，能拉取更新 |
-| 重启 | 点击「重启」按钮，能重启应用 |
-
-### 示例目录结构
-
-```
-examples/minimal/
-├── package.json           ← 示例项目配置
-├── main.js                ← 最小接入示例
-├── preload.js             ← 由 inject-preload 生成
-├── contract.json          ← 填好的契约
-└── src/
-    └── app/
-        ├── index.html     ← 示例页面
-        └── renderer.js    ← 渲染层逻辑
-```
-
 ### 示例接入步骤
 
 1. **安装依赖**：
@@ -182,11 +147,11 @@ update-kit/
 ├── test/                  ← kit 测试
 │   ├── core.test.js       ← 纯 core 断言
 │   ├── host.test.js       ← mock electron 测试
+│   ├── engine.test.js     ← engine 返回形状契约（本地裸仓库，零网络）
 │   ├── git-integration.test.js ← 临时 git 仓库集成测试
 │   └── run-all.js         ← 编排所有测试
 ├── defaults.json          ← kit 默认值
-├── contract.template.json ← 项目契约模板
-└── examples/minimal/      ← 最小接入示例
+└──  contract.template.json ← 项目契约模板
 ```
 
 ## 设计原则
@@ -195,6 +160,11 @@ update-kit/
 2. **host/ 不可复用**：依赖 electron + 项目特定逻辑
 3. **契约驱动**：第三方只需填一份契约文件
 4. **git subtree 分发**：守住 C1（可更新物在 git 内）
+
+## 模块间契约
+
+engine 返回形状、IPC 通道反查、主进程→渲染层载荷形状、状态推送时序等约定，
+见 [host/README.md](host/README.md#模块间契约改动前必读)。改动任一约定必须同步改测试。
 
 ## 参考文档
 
