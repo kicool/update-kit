@@ -7,6 +7,7 @@
 //
 // 红线：纯 node，零 electron 依赖（通过参数注入 setTimeout/clearTimeout）。
 'use strict';
+const { nextDelayMs } = require('../core/policy');
 
 /**
  * 创建调度器
@@ -23,7 +24,7 @@ function createScheduler({ policy, state, run, onChange }) {
   function start() {
     stop();
     const now = Date.now();
-    const delay = policy.nextDelayMs(now, state);
+    const delay = nextDelayMs(policy, now, state);
     nextAt = delay === null ? null : now + delay;
     if (delay !== null) {
       timer = setTimeout(() => {

@@ -19,13 +19,15 @@ function registerIpcBridge(ipcMain, bridgeApi, impl) {
   for (const api of bridgeApi) {
     const { name, type, channel } = api;
 
-    if (!impl[name]) {
-      throw new Error(`[ipc-bridge] 缺少实现: ${name}`);
-    }
-
     if (type === 'invoke') {
+      if (!impl[name]) {
+        throw new Error(`[ipc-bridge] 缺少实现: ${name}`);
+      }
       ipcMain.handle(channel, impl[name]);
     } else if (type === 'send') {
+      if (!impl[name]) {
+        throw new Error(`[ipc-bridge] 缺少实现: ${name}`);
+      }
       ipcMain.on(channel, impl[name]);
     } else if (type === 'on') {
       // on 类型由 renderer 主动监听，主进程不需要注册

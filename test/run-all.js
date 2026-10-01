@@ -3,7 +3,8 @@
 // 串行执行：
 //   1. core.test.js
 //   2. host.test.js
-//   3. git-integration.test.js
+//   3. engine.test.js
+//   4. git-integration.test.js
 //
 // 用法：
 //   node src/update-kit/test/run-all.js
@@ -16,6 +17,7 @@ const path = require('node:path');
 const tests = [
   'core.test.js',
   'host.test.js',
+  'engine.test.js',
   'git-integration.test.js',
 ];
 
